@@ -264,12 +264,11 @@ class RpnModel(model.DetectionModel):
                 self._img_pixel_size,
                 self._is_training)
 
-        self.img_feature_maps2, self.img_end_points2 = \
-            self._img_feature_extractor.build(
-                self._img_preprocessed2,
-                self._img_pixel_size,
-                self._is_training,
-                "img_vgg_pyr")
+        # self.img_feature_maps2, self.img_end_points2 = \
+        #     self._img_feature_extractor.build(
+        #         self._img_preprocessed2,
+        #         self._img_pixel_size,
+        #         self._is_training)
 
         with tf.variable_scope('bev_bottleneck'):
             self.bev_bottleneck = slim.conv2d(
@@ -289,14 +288,14 @@ class RpnModel(model.DetectionModel):
                 normalizer_params={
                     'is_training': self._is_training})
         # bottleneck for second image
-        with tf.variable_scope('img_bottleneck2'):
-            self.img_bottleneck2 = slim.conv2d(
-                self.img_feature_maps2,
-                1, [1, 1],
-                scope='bottleneck',
-                normalizer_fn=slim.batch_norm,
-                normalizer_params={
-                    'is_training': self._is_training})
+        # with tf.variable_scope('img_bottleneck2'):
+        #     self.img_bottleneck2 = slim.conv2d(
+        #         self.img_feature_maps2,
+        #         1, [1, 1],
+        #         scope='bottleneck',
+        #         normalizer_fn=slim.batch_norm,
+        #         normalizer_params={
+        #             'is_training': self._is_training})
 
         # # Visualize the end point feature maps being used
         # for feature_map in list(self.bev_end_points.items()):
