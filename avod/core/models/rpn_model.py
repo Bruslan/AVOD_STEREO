@@ -21,6 +21,7 @@ class RpnModel(model.DetectionModel):
     ##############################
     PL_BEV_INPUT = 'bev_input_pl'
     PL_IMG_INPUT = 'img_input_pl'
+    PL_IMG_INPUT2 = 'img_input_pl2'
     PL_ANCHORS = 'anchors_pl'
 
     PL_BEV_ANCHORS = 'bev_anchors_pl'
@@ -180,15 +181,30 @@ class RpnModel(model.DetectionModel):
                 [None, None, self._img_depth],
                 self.PL_IMG_INPUT)
 
+            img_input_placeholder2 = self._add_placeholder(
+                tf.float32,
+                [None, None, self._img_depth],
+                self.PL_IMG_INPUT2)
+
+
             self._img_input_batches = tf.expand_dims(
                 img_input_placeholder, axis=0)
+            
+            self._img_input_batches2 = tf.expand_dims(
+                img_input_placeholder2, axis=0)
 
             self._img_preprocessed = \
                 self._img_feature_extractor.preprocess_input(
                     self._img_input_batches, self._img_pixel_size)
+            
+            self._img_preprocessed2 = \
+                self._img_feature_extractor.preprocess_input(
+                    self._img_input_batches2, self._img_pixel_size)
 
             # Summary Image
             tf.summary.image("rgb_image", self._img_preprocessed,
+                             max_outputs=2)
+            tf.summary.image("rgb_image2", self._img_preprocessed2,
                              max_outputs=2)
 
         with tf.variable_scope('pl_labels'):
@@ -248,6 +264,12 @@ class RpnModel(model.DetectionModel):
                 self._img_pixel_size,
                 self._is_training)
 
+        self.img_feature_maps2, self.img_end_points2 = \
+            self._img_feature_extractor.build(
+                self._img_preprocessed2,
+                self._img_pixel_size,
+                self._is_training)
+
         with tf.variable_scope('bev_bottleneck'):
             self.bev_bottleneck = slim.conv2d(
                 self.bev_feature_maps,
@@ -260,6 +282,15 @@ class RpnModel(model.DetectionModel):
         with tf.variable_scope('img_bottleneck'):
             self.img_bottleneck = slim.conv2d(
                 self.img_feature_maps,
+                1, [1, 1],
+                scope='bottleneck',
+                normalizer_fn=slim.batch_norm,
+                normalizer_params={
+                    'is_training': self._is_training})
+        # bottleneck for second image
+        with tf.variable_scope('img_bottleneck2'):
+            self.img_bottleneck2 = slim.conv2d(
+                self.img_feature_maps2,
                 1, [1, 1],
                 scope='bottleneck',
                 normalizer_fn=slim.batch_norm,
@@ -287,6 +318,7 @@ class RpnModel(model.DetectionModel):
 
         bev_proposal_input = self.bev_bottleneck
         img_proposal_input = self.img_bottleneck
+        img_proposal_input2 = self.img_bottleneck2
 
         fusion_mean_div_factor = 2.0
 
@@ -307,6 +339,8 @@ class RpnModel(model.DetectionModel):
 
                 img_proposal_input = tf.multiply(img_proposal_input,
                                                  img_mask)
+                img_proposal_input2 = tf.multiply(img_proposal_input2,
+                                    img_mask)
 
                 bev_proposal_input = tf.multiply(bev_proposal_input,
                                                  bev_mask)
@@ -347,13 +381,26 @@ class RpnModel(model.DetectionModel):
                 self._img_anchors_norm_pl,
                 tf_box_indices,
                 self._proposal_roi_crop_size)
+    
+            img_proposal_rois2 = tf.image.crop_and_resize(
+                img_proposal_input2,
+                self._img_anchors_norm_pl,
+                tf_box_indices,
+                self._proposal_roi_crop_size)
 
         with tf.variable_scope('proposal_roi_fusion'):
             rpn_fusion_out = None
             if self._fusion_method == 'mean':
                 tf_features_sum = tf.add(bev_proposal_rois, img_proposal_rois)
+
                 rpn_fusion_out = tf.divide(tf_features_sum,
                                            fusion_mean_div_factor)
+            
+                tf_features_sum2 = tf.add(rpn_fusion_out, img_proposal_rois2)
+                rpn_fusion_out = tf.divide(tf_features_sum2,
+                                           fusion_mean_div_factor)
+
+
             elif self._fusion_method == 'concat':
                 rpn_fusion_out = tf.concat(
                     [bev_proposal_rois, img_proposal_rois], axis=3)
@@ -680,10 +727,12 @@ class RpnModel(model.DetectionModel):
 
         # Network input data
         image_input = sample.get(constants.KEY_IMAGE_INPUT)
+        image_input2 = sample.get(constants.KEY_IMAGE_INPUT2)
         bev_input = sample.get(constants.KEY_BEV_INPUT)
 
         # Image shape (h, w)
         image_shape = [image_input.shape[0], image_input.shape[1]]
+        image_shape2 = [image_input2.shape[0], image_input2.shape[1]]
 
         ground_plane = sample.get(constants.KEY_GROUND_PLANE)
         stereo_calib_p2 = sample.get(constants.KEY_STEREO_CALIB_P2)
@@ -702,7 +751,8 @@ class RpnModel(model.DetectionModel):
         # Fill in the rest
         self._placeholder_inputs[self.PL_BEV_INPUT] = bev_input
         self._placeholder_inputs[self.PL_IMG_INPUT] = image_input
-
+        self._placeholder_inputs[self.PL_IMG_INPUT2] = image_input2
+        
         self._placeholder_inputs[self.PL_LABEL_ANCHORS] = label_anchors
         self._placeholder_inputs[self.PL_LABEL_BOXES_3D] = label_boxes_3d
         self._placeholder_inputs[self.PL_LABEL_CLASSES] = label_classes

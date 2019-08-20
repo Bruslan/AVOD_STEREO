@@ -184,9 +184,25 @@ class AvodModel(model.DetectionModel):
                 img_proposal_boxes_norm_tf_order = \
                     anchor_projector.reorder_projected_boxes(
                         img_proposal_boxes_norm)
+            
+            
+            with tf.variable_scope('img2'):
+                image_shape2 = tf.cast(tf.shape(
+                    rpn_model.placeholders[RpnModel.PL_IMG_INPUT2])[0:2],
+                    tf.float32)
+                img_proposal_boxes2, img_proposal_boxes_norm2 = \
+                    anchor_projector.tf_project_to_image_space(
+                        avod_projection_in,
+                        rpn_model.placeholders[RpnModel.PL_CALIB_P2],
+                        image_shape2)
+                # Only reorder the normalized img
+                img_proposal_boxes_norm_tf_order2 = \
+                    anchor_projector.reorder_projected_boxes(
+                        img_proposal_boxes_norm2)
 
         bev_feature_maps = rpn_model.bev_feature_maps
         img_feature_maps = rpn_model.img_feature_maps
+        img_feature_maps2 = rpn_model.img_feature_maps2
 
         if not (self._path_drop_probabilities[0] ==
                 self._path_drop_probabilities[1] == 1.0):
@@ -198,6 +214,11 @@ class AvodModel(model.DetectionModel):
 
                 img_feature_maps = tf.multiply(img_feature_maps,
                                                img_mask)
+
+
+                img_feature_maps2 = tf.multiply(img_feature_maps2,
+                                               img_mask)
+
 
                 bev_feature_maps = tf.multiply(bev_feature_maps,
                                                bev_mask)
@@ -237,13 +258,19 @@ class AvodModel(model.DetectionModel):
                 self._proposal_roi_crop_size,
                 name='img_rois')
 
+            img_rois2 = tf.image.crop_and_resize(
+                img_feature_maps2,
+                img_proposal_boxes_norm_tf_order2,
+                tf_box_indices,
+                self._proposal_roi_crop_size,
+                name='img_rois2')
         # Fully connected layers (Box Predictor)
         avod_layers_config = self.model_config.layers_config.avod_config
 
         fc_output_layers = \
             avod_fc_layers_builder.build(
                 layers_config=avod_layers_config,
-                input_rois=[bev_rois, img_rois],
+                input_rois=[bev_rois, img_rois, img_rois2],
                 input_weights=[bev_mask, img_mask],
                 num_final_classes=self._num_final_classes,
                 box_rep=self._box_rep,
@@ -434,6 +461,26 @@ class AvodModel(model.DetectionModel):
             tf.summary.image('img_avod_rois',
                              img_input_rois,
                              max_outputs=avod_mini_batch_size)
+
+
+
+        with tf.variable_scope('img_avod_rois2'):
+            # ROIs on image input
+            mb_img_anchors_norm2 = tf.boolean_mask(
+                img_proposal_boxes_norm_tf_order2, mb_mask)
+            mb_img_box_indices2 = tf.zeros_like(mb_gt_indices, dtype=tf.int32)
+
+            # Do test ROI pooling on mini batch
+            img_input_rois2 = tf.image.crop_and_resize(
+                self._rpn_model._img_preprocessed2,
+                mb_img_anchors_norm2,
+                mb_img_box_indices2,
+                (32, 32))
+
+            tf.summary.image('img_avod_rois2',
+                             img_input_rois2,
+                             max_outputs=avod_mini_batch_size)
+
 
         ######################################################
         # Final Predictions
