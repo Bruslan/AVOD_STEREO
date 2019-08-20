@@ -262,7 +262,8 @@ class RpnModel(model.DetectionModel):
             self._img_feature_extractor.build(
                 self._img_preprocessed,
                 self._img_pixel_size,
-                self._is_training)
+                self._is_training,
+                'img_vgg_pyr')
 
 
         with tf.variable_scope('bev_bottleneck'):
@@ -288,7 +289,8 @@ class RpnModel(model.DetectionModel):
             self._img_feature_extractor.build(
                 self._img_preprocessed2,
                 self._img_pixel_size,
-                self._is_training)
+                self._is_training,
+                'img_vgg_pyr2')
 
         # bottleneck for second image
         with tf.variable_scope('img_bottleneck2'):

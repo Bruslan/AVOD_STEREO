@@ -31,6 +31,7 @@ class ImgVggPyr(img_feature_extractor.ImgFeatureExtractor):
               inputs,
               input_pixel_size,
               is_training,
+              name,
               scope='img_vgg_pyr'):
         """ Modified VGG for image feature extraction with pyramid features.
 
@@ -47,7 +48,7 @@ class ImgVggPyr(img_feature_extractor.ImgFeatureExtractor):
 
         with slim.arg_scope(self.vgg_arg_scope(
                 weight_decay=vgg_config.l2_weight_decay)):
-            with tf.variable_scope(scope, 'img_vgg_pyr', reuse=True, [inputs]) as sc:
+            with tf.variable_scope(name, name, [inputs]) as sc:
                 end_points_collection = sc.name + '_end_points'
 
                 # Collect outputs for conv2d, fully_connected and max_pool2d.
