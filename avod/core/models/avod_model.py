@@ -121,6 +121,7 @@ class AvodModel(model.DetectionModel):
         self.sample_info = {}
 
     def build(self):
+        
         rpn_model = self._rpn_model
 
         # Share the same prediction dict as RPN

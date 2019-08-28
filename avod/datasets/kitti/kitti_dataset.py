@@ -130,6 +130,7 @@ class KittiDataset:
 
         # Setup utils object
         self.kitti_utils = KittiUtils(self)
+        set_trace()
 
     # Paths
     @property
