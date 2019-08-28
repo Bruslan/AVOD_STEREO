@@ -16,7 +16,6 @@ from avod.core.models.rpn_model import RpnModel
 from avod.core import trainer
 
 
-from pudb import set_trace; set_trace()
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
@@ -25,25 +24,25 @@ def train(model_config, train_config, dataset_config):
 
     dataset = DatasetBuilder.build_kitti_dataset(dataset_config,
                                                  use_defaults=False)
-    set_trace()
+
 
     train_val_test = 'train'
     model_name = model_config.model_name
 
     with tf.Graph().as_default():
         if model_name == 'rpn_model':
-            set_trace()
+        
             model = RpnModel(model_config,
                              train_val_test=train_val_test,
                              dataset=dataset)
         elif model_name == 'avod_model':
-            set_trace()
+     
             model = AvodModel(model_config,
                               train_val_test=train_val_test,
                               dataset=dataset)
         else:
             raise ValueError('Invalid model_name')
-        set_trace()
+ 
         trainer.train(model, train_config)
 
 

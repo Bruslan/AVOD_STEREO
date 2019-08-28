@@ -272,7 +272,7 @@ class AvodModel(model.DetectionModel):
             avod_fc_layers_builder.build(
                 layers_config=avod_layers_config,
                 input_rois=[bev_rois, img_rois, img_rois2],
-                input_weights=[bev_mask, img_mask],
+                input_weights=[bev_mask, img_mask, img_mask],
                 num_final_classes=self._num_final_classes,
                 box_rep=self._box_rep,
                 top_anchors=top_anchors,
