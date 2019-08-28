@@ -302,23 +302,30 @@ class KittiDataset:
                                                     self.planes_dir)
 
             # Get calibration
-            stereo_calib_p2 = calib_utils.read_calibration(self.calib_dir,
-                                                           int(sample_name)).p2
+            stereo_calib = calib_utils.read_calibration(self.calib_dir,
+                                                           int(sample_name))
+            stereo_calib_p2 =  stereo_calib.p2
+            stereo_calib_p3 = stereo_calib.p3                                              
 
             point_cloud = self.kitti_utils.get_point_cloud(self.bev_source,
                                                            img_idx,
                                                            image_shape)
-
+            point_cloud2 = self.kitti_utils.get_point_cloud(self.bev_source,
+                                                           img_idx,
+                                                           image_shape2)
             # Augmentation (Flipping)
             if kitti_aug.AUG_FLIPPING in sample.augs:
                 image_input = kitti_aug.flip_image(image_input)
                 image_input2 = kitti_aug.flip_image(image_input2)
                 point_cloud = kitti_aug.flip_point_cloud(point_cloud)
+                point_cloud2 = kitti_aug.flip_point_cloud(point_cloud2)
                 obj_labels = [kitti_aug.flip_label_in_3d_only(obj)
                               for obj in obj_labels]
                 ground_plane = kitti_aug.flip_ground_plane(ground_plane)
                 stereo_calib_p2 = kitti_aug.flip_stereo_calib_p2(
                     stereo_calib_p2, image_shape)
+                stereo_calib_p3 = kitti_aug.flip_stereo_calib_p2(
+                    stereo_calib_p3, image_shape2)
 
             # Augmentation (Image Jitter)
             if kitti_aug.AUG_PCA_JITTER in sample.augs:
@@ -381,7 +388,7 @@ class KittiDataset:
                 constants.KEY_POINT_CLOUD: point_cloud,
                 constants.KEY_GROUND_PLANE: ground_plane,
                 constants.KEY_STEREO_CALIB_P2: stereo_calib_p2,
-
+                constants.KEY_STEREO_CALIB_P2: stereo_calib_p3,
                 constants.KEY_SAMPLE_NAME: sample_name,
                 constants.KEY_SAMPLE_AUGS: sample.augs
             }

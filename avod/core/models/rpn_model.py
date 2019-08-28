@@ -27,6 +27,7 @@ class RpnModel(model.DetectionModel):
     PL_BEV_ANCHORS = 'bev_anchors_pl'
     PL_BEV_ANCHORS_NORM = 'bev_anchors_norm_pl'
     PL_IMG_ANCHORS = 'img_anchors_pl'
+    PL_IMG_ANCHORS2 = 'img_anchors_pl2'
     PL_IMG_ANCHORS_NORM = 'img_anchors_norm_pl'
     PL_LABEL_ANCHORS = 'label_anchors_pl'
     PL_LABEL_BOXES_3D = 'label_boxes_3d_pl'
@@ -39,6 +40,7 @@ class RpnModel(model.DetectionModel):
     # Sample info, including keys for projection to image space
     # (e.g. camera matrix, image index, etc.)
     PL_CALIB_P2 = 'frame_calib_p2'
+    PL_CALIB_P3 = 'frame_calib_p3'
     PL_IMG_IDX = 'current_img_idx'
     PL_GROUND_PLANE = 'ground_plane'
 
@@ -741,12 +743,13 @@ class RpnModel(model.DetectionModel):
 
         ground_plane = sample.get(constants.KEY_GROUND_PLANE)
         stereo_calib_p2 = sample.get(constants.KEY_STEREO_CALIB_P2)
-
+        stereo_calib_p3 = sample.get(constants.KEY_STEREO_CALIB_P3)
         # Fill the placeholders for anchor information
         self._fill_anchor_pl_inputs(anchors_info=anchors_info,
                                     ground_plane=ground_plane,
                                     image_shape=image_shape,
                                     stereo_calib_p2=stereo_calib_p2,
+                                    stereo_calib_p3=stereo_calib_p3,
                                     sample_name=sample_name,
                                     sample_augs=sample_augs)
 
@@ -785,6 +788,7 @@ class RpnModel(model.DetectionModel):
                                ground_plane,
                                image_shape,
                                stereo_calib_p2,
+                               stereo_calib_p3,
                                sample_name,
                                sample_augs):
         """
@@ -889,10 +893,13 @@ class RpnModel(model.DetectionModel):
             anchor_projector.project_to_image_space(
                 anchors_to_use, stereo_calib_p2, image_shape)
 
+        img_anchors2, img_anchors_norm2 = \
+            anchor_projector.project_to_image_space(
+                anchors_to_use, stereo_calib_p3, image_shape)
         # Reorder into [y1, x1, y2, x2] for tf.crop_and_resize op
         self._bev_anchors_norm = bev_anchors_norm[:, [1, 0, 3, 2]]
         self._img_anchors_norm = img_anchors_norm[:, [1, 0, 3, 2]]
-
+        self._img_anchors_norm2 = img_anchors_norm2[:, [1, 0, 3, 2]]
         # Fill in placeholder inputs
         self._placeholder_inputs[self.PL_ANCHORS] = anchors_to_use
 
@@ -923,6 +930,7 @@ class RpnModel(model.DetectionModel):
         self._placeholder_inputs[self.PL_BEV_ANCHORS_NORM] = \
             self._bev_anchors_norm
         self._placeholder_inputs[self.PL_IMG_ANCHORS] = img_anchors
+        self._placeholder_inputs[self.PL_IMG_ANCHORS2] = img_anchors2
         self._placeholder_inputs[self.PL_IMG_ANCHORS_NORM] = \
             self._img_anchors_norm
 
