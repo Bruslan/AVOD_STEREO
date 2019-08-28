@@ -14,7 +14,7 @@ from avod.core import box_3d_encoder
 from avod.core import constants
 from avod.datasets.kitti import kitti_aug
 from avod.datasets.kitti.kitti_utils import KittiUtils
-import pudb; 
+
 
 
 class Sample:
@@ -305,7 +305,7 @@ class KittiDataset:
 
             # Get calibration
 
-            pudb.set_trace()
+        
             stereo_calib = calib_utils.read_calibration(self.calib_dir,
                                                            int(sample_name))
 
