@@ -8,11 +8,11 @@ import numpy as np
 import tensorflow as tf
 
 from wavedata.tools.core import calib_utils
-import pudb; 
+
 
 
 def project_to_bev(anchors, bev_extents):
-    pudb.set_trace()
+    
     """
     Projects an array of 3D anchors into bird's eye view
 
