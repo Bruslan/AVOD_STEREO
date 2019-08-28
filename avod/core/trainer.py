@@ -11,6 +11,7 @@ import time
 from avod.builders import optimizer_builder
 from avod.core import trainer_utils
 from avod.core import summary_utils
+from pudb import set_trace
 
 slim = tf.contrib.slim
 
@@ -56,6 +57,7 @@ def train(model, train_config):
     global_summaries = set([])
 
     # The model should return a dictionary of predictions
+    set_trace()
     prediction_dict = model.build()
 
     summary_histograms = train_config.summary_histograms
