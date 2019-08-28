@@ -16,7 +16,7 @@ from avod.core.models.rpn_model import RpnModel
 from avod.core import trainer
 
 
-import pdb; pdb.set_trace()
+from pudb import set_trace; set_trace()
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
