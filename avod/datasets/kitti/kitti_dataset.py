@@ -394,7 +394,7 @@ class KittiDataset:
                 constants.KEY_POINT_CLOUD: point_cloud,
                 constants.KEY_GROUND_PLANE: ground_plane,
                 constants.KEY_STEREO_CALIB_P2: stereo_calib_p2,
-                constants.KEY_STEREO_CALIB_P2: stereo_calib_p3,
+                constants.KEY_STEREO_CALIB_P3: stereo_calib_p3,
                 constants.KEY_SAMPLE_NAME: sample_name,
                 constants.KEY_SAMPLE_AUGS: sample.augs
             }
