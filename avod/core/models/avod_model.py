@@ -193,7 +193,7 @@ class AvodModel(model.DetectionModel):
                 img_proposal_boxes2, img_proposal_boxes_norm2 = \
                     anchor_projector.tf_project_to_image_space(
                         avod_projection_in,
-                        rpn_model.placeholders[RpnModel.PL_CALIB_P3],
+                        rpn_model.placeholders[RpnModel.PL_CALIB_P2],
                         image_shape2)
                 # Only reorder the normalized img
                 img_proposal_boxes_norm_tf_order2 = \
